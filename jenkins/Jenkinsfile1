@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+            }
+        }
+        stage('Upload') {
+
+            steps{
+                dir('/var/lib/jenkins/workspace/Sample_pipeline'){
+
+                    pwd(); //Log current directory
+
+                    withAWS(region:'us-east-2',credentials:'8074b26a-7a09-48de-8372-1e3da58cc63d	') {
+                        script{
+                         def identity=awsIdentity();//Log AWS credentials
+                        
+                        // Upload files from working directory 'dist' in your project workspace
+                        s3Upload(bucket:"ranjendra", workingDir:'target', includePathPattern:'**/*.jar');
+                        }
+                    }
+
+                };
+            }
+    }
+    }
+}
