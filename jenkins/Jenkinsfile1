@@ -1,6 +1,31 @@
+
+/* Declarative pipeline must be enclosed within a pipeline block */
 pipeline {
+   // agent section specifies where the entire Pipeline will execute in the Jenkins environment
     agent any
+     
+     tools {
+        jdk 'jdk1.7'
+        maven 'mvn3.5.0'
+    }
+    /**
+     * stages contain one or more stage directives
+     */
     stages {
+     /**
+         * the stage directive should contain a steps section, an optional agent section, or other stage-specific directives
+         * all of the real work done by a Pipeline will be wrapped in one or more stage directives
+     */
+     
+       stage ('Initialize') {
+            steps {
+                sh '''
+                    echo "PATH = ${PATH}"
+                    echo "M2_HOME = ${M2_HOME}"
+                '''
+            }
+        }
+        
         stage('Build') {
             steps {
                 sh 'mvn -B -DskipTests clean package'
@@ -21,8 +46,7 @@ pipeline {
                 sh './jenkins/scripts/deliver.sh'
             }
         }
-        stage('Upload') {
-
+        stage('Upload the jar in S3') {
             steps{
                 dir('/var/lib/jenkins/workspace/Sample_pipeline'){
 
@@ -32,7 +56,7 @@ pipeline {
                         script{
                          def identity=awsIdentity();//Log AWS credentials
                         
-                        // Upload files from working directory 'dist' in your project workspace
+                        // Upload files from working directory 'target' in your project workspace
                         s3Upload(bucket:"ranjendra", workingDir:'target', includePathPattern:'**/*.jar');
                         }
                     }
