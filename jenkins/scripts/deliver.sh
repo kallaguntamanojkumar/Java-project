@@ -24,3 +24,7 @@ echo 'The following command runs and outputs the execution of your Java'
 echo 'application (which Jenkins built using Maven) to the Jenkins UI.'
 set -x
 java -jar target/${NAME}-${VERSION}.jar
+
+
+curl --silent --output /dev/stderr --write-out "%{http_code}" -k -u ${uploadPkgUser}:${uploadPkgUserPassword} -X POST "${nexusRestAPIURL}/components?repository=${nexusRepo}" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "maven2.groupId=${nexusMvnGroupID}" -F "maven2.artifactId=${artifactID}" -F "maven2.version=${artifactVersion}" -F "maven2.generate-pom=false" -F "maven2.packaging=zip" -F "maven2.asset1=@${WORKSPACE}/target/${artifactID}.zip" -F "maven2.asset1.extension=zip" )
+                                               
